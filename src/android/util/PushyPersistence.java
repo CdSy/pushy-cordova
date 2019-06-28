@@ -15,21 +15,23 @@ import me.pushy.sdk.util.PushySingleton;
 public class PushyPersistence {
     public static final String NOTIFICATION_ICON = "pushyNotificationIcon";
     public static final String PENDING_NOTIFICATIONS = "pushyPendingNotifications";
+    public static final String ACTIVE_NOTIFICATIONS = "pushyActiveNotifications";
+    public static final String CANCEL_NOTIFICATIONS = "pushyCancelNotifications";
 
     private static SharedPreferences getSettings(Context context) {
         // Get default app SharedPreferences
         return PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public static void persistNotification(JSONObject notification, Context context) {
+    public static void persistNotification(JSONObject notification, Context context, String type) {
         // Get pending notifications from SharedPreferences
-        JSONArray pendingNotifications = getPendingNotifications(context);
+        JSONArray pendingNotifications = getNotifications(context, type);
 
         // Add new notification
         pendingNotifications.put(notification);
 
         // Store notification JSON array in SharedPreferences
-        getSettings(context).edit().putString(PushyPersistence.PENDING_NOTIFICATIONS, pendingNotifications.toString()).commit();
+        getSettings(context).edit().putString(type, pendingNotifications.toString()).commit();
     }
 
     public static void setNotificationIcon(String icon, Context context) {
@@ -42,9 +44,9 @@ public class PushyPersistence {
         return getSettings(context).getString(PushyPersistence.NOTIFICATION_ICON, null);
     }
 
-    public static JSONArray getPendingNotifications(Context context) {
+    public static JSONArray getNotifications(Context context, String type) {
         // Get pending notifications from SharedPreferences
-        String pendingNotifications = PushySingleton.getSettings(context).getString(PENDING_NOTIFICATIONS, null);
+        String pendingNotifications = PushySingleton.getSettings(context).getString(type, null);
 
         // Prepare JSON array with notifications
         JSONArray json = new JSONArray();
@@ -67,8 +69,8 @@ public class PushyPersistence {
         return json;
     }
 
-    public static void clearPendingNotifications(Context context) {
+    public static void clearNotifications(Context context, String type) {
         // Clear the pending notifications from SharedPreferences
-        PushySingleton.getSettings(context).edit().remove(PENDING_NOTIFICATIONS).commit();
+        PushySingleton.getSettings(context).edit().remove(type).commit();
     }
 }

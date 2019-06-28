@@ -1,11 +1,11 @@
 package me.pushy.sdk;
 
-import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import me.pushy.sdk.config.PushyLogging;
 import me.pushy.sdk.cordova.internal.util.PushyPersistence;
 import me.pushy.sdk.cordova.internal.activity.PushyActivity;
-import me.pushy.sdk.cordova.internal.activity.PushyDismissActivity;
+import me.pushy.sdk.cordova.internal.service.PushyDismissService;
 
 public class PushReceiver extends BroadcastReceiver {
   @Override
@@ -55,8 +55,10 @@ public class PushReceiver extends BroadcastReceiver {
 
     pendingIntentData.put("notid", Integer.toString(notId));
 
-    PendingIntent activePendingIntent = getMainActivityPendingIntent(context, pendingIntentData, PushyActivity.class);
-    PendingIntent dismissPendingIntent = getMainActivityPendingIntent(context, pendingIntentData, PushyDismissActivity.class);
+    PendingIntent activePendingIntent = getPendingIntent(context, pendingIntentData, "activity");
+    PendingIntent dismissPendingIntent = getPendingIntent(context, pendingIntentData, "service");
+
+    int colorCode = Color.parseColor("#1e9ee0") ;
 
     // Prepare a notification with vibration and sound
     Notification.Builder builder = new Notification.Builder(context)
@@ -68,6 +70,7 @@ public class PushReceiver extends BroadcastReceiver {
           .bigText(notificationText)
       )
       .setVibrate(new long[]{0, 400, 250, 400})
+      .setColor(colorCode)
       .setSmallIcon(getNotificationIcon(context))
       .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
 
@@ -127,9 +130,16 @@ public class PushReceiver extends BroadcastReceiver {
     return context.getPackageManager().getApplicationLabel(context.getApplicationInfo()).toString();
   }
 
-  private PendingIntent getMainActivityPendingIntent(Context context, Map<String, String> pendingIntentData, final Class<? extends Activity> ActivityToOpen) {
+  private PendingIntent getPendingIntent(Context context, Map<String, String> pendingIntentData, String type) {
     try {
-      Intent intent = new Intent(context, ActivityToOpen);
+      Intent intent;
+      
+      if (type == "activity") {
+        intent = new Intent(context, PushyActivity.class);
+      } else {
+        intent = new Intent(context, PushyDismissService.class);
+      }
+
       int requestCode = 0;
       
       try {
@@ -150,7 +160,14 @@ public class PushReceiver extends BroadcastReceiver {
         }
       }
   
-      PendingIntent pendingIntent = PendingIntent.getActivity(context, requestCode, intent, 0);
+      PendingIntent pendingIntent;
+      
+      if (type == "activity") {
+        pendingIntent = PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT);
+      } else {
+        pendingIntent = PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT);
+      }
+      
       Log.d(PushyLogging.TAG, "==> PendingIntent has been created successfuly");
 
       return pendingIntent;

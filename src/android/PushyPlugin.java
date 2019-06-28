@@ -25,6 +25,7 @@ import me.pushy.sdk.util.exceptions.PushyException;
 public class PushyPlugin extends CordovaPlugin {
   private static final String TAG = "PushyPlugin";
   private static PushyPlugin mInstance;
+  private static Context mContext;
   private CallbackContext mNotificationHandler;
   private CallbackContext mDismissNotificationHandler;
 
@@ -33,6 +34,7 @@ public class PushyPlugin extends CordovaPlugin {
     super.initialize(cordova, webView);
 
     // Store plugin instance
+    Log.e(PushyLogging.TAG, "===> PushyPlugin has been initialized");
     mInstance = this;
   }
 
@@ -136,11 +138,13 @@ public class PushyPlugin extends CordovaPlugin {
 
         // Attempt to deliver any pending notifications
         deliverPendingNotifications();
+        deliverActiveNotifications();
     }
 
     private void setDismissNotificationListener(CallbackContext callbackContext) {
       // Save dismiss notification listener callback for later
       mDismissNotificationHandler = callbackContext;
+      deliverCancelNotifications();
     }
 
     private void deliverPendingNotifications() {
@@ -150,7 +154,7 @@ public class PushyPlugin extends CordovaPlugin {
         }
 
         // Get pending notifications
-        JSONArray notifications = PushyPersistence.getPendingNotifications(cordova.getActivity());
+        JSONArray notifications = PushyPersistence.getNotifications(cordova.getActivity(), PushyPersistence.PENDING_NOTIFICATIONS);
 
         // Got at least one?
         if (notifications.length() > 0) {
@@ -167,7 +171,63 @@ public class PushyPlugin extends CordovaPlugin {
             }
 
             // Clear persisted notifications
-            PushyPersistence.clearPendingNotifications(cordova.getActivity());
+            PushyPersistence.clearNotifications(cordova.getActivity(), PushyPersistence.PENDING_NOTIFICATIONS);
+        }
+    }
+
+    private void deliverActiveNotifications() {
+        // Activity must be running for this to work
+        if (!isActivityRunning()) {
+            return;
+        }
+
+        // Get pending notifications
+        JSONArray notifications = PushyPersistence.getNotifications(cordova.getActivity(), PushyPersistence.ACTIVE_NOTIFICATIONS);
+
+        // Got at least one?
+        if (notifications.length() > 0) {
+            // Traverse notifications
+            for (int i = 0; i < notifications.length(); i++) {
+                try {
+                    // Emit notification to listener
+                    onClickNotification(notifications.getJSONObject(i));
+                }
+                catch (JSONException e) {
+                    // Log error to logcat
+                    Log.e(PushyLogging.TAG, "Failed to parse JSON object:" + e.getMessage(), e);
+                }
+            }
+
+            // Clear persisted notifications
+            PushyPersistence.clearNotifications(cordova.getActivity(), PushyPersistence.ACTIVE_NOTIFICATIONS);
+        }
+    }
+
+    private void deliverCancelNotifications() {
+        // Activity must be running for this to work
+        if (!isActivityRunning()) {
+            return;
+        }
+
+        // Get pending notifications
+        JSONArray notifications = PushyPersistence.getNotifications(cordova.getActivity(), PushyPersistence.CANCEL_NOTIFICATIONS);
+
+        // Got at least one?
+        if (notifications.length() > 0) {
+            // Traverse notifications
+            for (int i = 0; i < notifications.length(); i++) {
+                try {
+                    // Emit notification to listener
+                    onDismissNotification(notifications.getJSONObject(i));
+                }
+                catch (JSONException e) {
+                    // Log error to logcat
+                    Log.e(PushyLogging.TAG, "Failed to parse JSON object:" + e.getMessage(), e);
+                }
+            }
+
+            // Clear persisted notifications
+            PushyPersistence.clearNotifications(cordova.getActivity(), PushyPersistence.CANCEL_NOTIFICATIONS);
         }
     }
 
@@ -198,8 +258,9 @@ public class PushyPlugin extends CordovaPlugin {
     public static void onNotificationReceived(JSONObject notification, Context context) {
         // Activity is not running or no notification handler defined?
         if (mInstance == null || !mInstance.isActivityRunning() || mInstance.mNotificationHandler == null) {
+            mContext = context;
             // Store notification JSON in SharedPreferences and deliver it when app is opened
-            PushyPersistence.persistNotification(notification, context);
+            PushyPersistence.persistNotification(notification, context, PushyPersistence.PENDING_NOTIFICATIONS);
             return;
         }
 
@@ -214,16 +275,35 @@ public class PushyPlugin extends CordovaPlugin {
     }
 
     public static void onClickNotification(JSONObject notification) {
-      onNotificationReceived(notification, mInstance.cordova.getActivity());
+        if (mInstance == null || !mInstance.isActivityRunning() || mInstance.mNotificationHandler == null) {
+            // Store notification JSON in SharedPreferences and deliver it when app is opened
+            PushyPersistence.persistNotification(notification, mContext, PushyPersistence.ACTIVE_NOTIFICATIONS);
+            return;
+        }
+
+         // We're live, prepare a plugin result object that allows invoking the notification listener multiple times
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, notification);
+
+        // Keep the callback valid for future use
+        pluginResult.setKeepCallback(true);
+
+        // Invoke the JavaScript callback
+        mInstance.mNotificationHandler.sendPluginResult(pluginResult);
     }
 
     public static void onDismissNotification(JSONObject notification) {
-      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, notification);
+        if (mInstance == null || !mInstance.isActivityRunning() || mInstance.mDismissNotificationHandler == null) {
+            // Store notification JSON in SharedPreferences and deliver it when app is opened
+            PushyPersistence.persistNotification(notification, mContext, PushyPersistence.CANCEL_NOTIFICATIONS);
+            return;
+        }
 
-      // Keep the callback valid for future use
-      pluginResult.setKeepCallback(true);
-      // Invoke the JavaScript callback
-      mInstance.mDismissNotificationHandler.sendPluginResult(pluginResult);
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, notification);
+
+        // Keep the callback valid for future use
+        pluginResult.setKeepCallback(true);
+        // Invoke the JavaScript callback
+        mInstance.mDismissNotificationHandler.sendPluginResult(pluginResult);
     }
 
     private void register(final CallbackContext callback) {
