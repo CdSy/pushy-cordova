@@ -39,6 +39,11 @@ var actions = [
         platforms: ['android', 'ios']
     },
     {
+      name: 'setDismissNotificationListener',
+      noError: true,
+      platforms: ['android']
+    },
+    {
         name: 'setEnterpriseConfig',
         noError: true,
         noCallback: true,
@@ -54,6 +59,12 @@ var actions = [
         name: 'setNotificationIcon',
         noError: true,
         noCallback: true,
+        platforms: ['android']
+    },
+    {
+        name: 'cancelNotification',
+        noError: true,
+        noCallback: false,
         platforms: ['android']
     },
 ];

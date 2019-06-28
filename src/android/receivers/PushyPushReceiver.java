@@ -26,6 +26,13 @@ public class PushyPushReceiver extends BroadcastReceiver {
         // Get JSON key names
         Set<String> keys = bundle.keySet();
 
+        try {
+            json.put("wasTapped", false);
+        } catch (JSONException e) {
+            Log.e(PushyLogging.TAG, "Failed to insert +wasTapped+ extra into JSONObject:" + e.getMessage(), e);
+            return;
+        }
+
         // Traverse keys
         for (String key : keys) {
             try {

@@ -2,6 +2,7 @@ package me.pushy.sdk.cordova.internal;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.util.Log;
 
@@ -22,16 +23,18 @@ import me.pushy.sdk.cordova.internal.util.PushyPersistence;
 import me.pushy.sdk.util.exceptions.PushyException;
 
 public class PushyPlugin extends CordovaPlugin {
-    private static PushyPlugin mInstance;
-    private CallbackContext mNotificationHandler;
+  private static final String TAG = "PushyPlugin";
+  private static PushyPlugin mInstance;
+  private CallbackContext mNotificationHandler;
+  private CallbackContext mDismissNotificationHandler;
 
-    @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
+  @Override
+  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    super.initialize(cordova, webView);
 
-        // Store plugin instance
-        mInstance = this;
-    }
+    // Store plugin instance
+    mInstance = this;
+  }
 
     @Override
     public boolean execute(final String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -52,6 +55,11 @@ public class PushyPlugin extends CordovaPlugin {
                 // Listen for notifications
                 if (action.equals("setNotificationListener")) {
                     setNotificationListener(callbackContext);
+                }
+
+                // Listen for dismiss notifications
+                if (action.equals("setDismissNotificationListener")) {
+                  setDismissNotificationListener(callbackContext);
                 }
 
                 // Request WRITE_EXTERNAL_STORAGE permission
@@ -88,11 +96,38 @@ public class PushyPlugin extends CordovaPlugin {
                 if (action.equals("setNotificationIcon")) {
                     setNotificationIcon(args);
                 }
+
+                // Cancel a previously shown notification
+                if (action.equals("cancelNotification")) {
+                    cancelNotification(args, callbackContext, cordova.getActivity());
+                }
             }
         });
 
         // Always return true regardless of action validity
         return true;
+    }
+
+    private void cancelNotification(JSONArray args, CallbackContext callbackContext, Context context) {
+      NotificationManager notificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
+
+      int notId;
+
+      try {
+        notId = args.getInt(0);
+      } catch (JSONException e) {
+        Log.e(PushyLogging.TAG, "Failed get +notId+ from JSONObject:" + e.getMessage(), e);
+        return;
+      }
+
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, args);
+
+      // Keep the callback valid for future use
+      pluginResult.setKeepCallback(true);
+      // Invoke the JavaScript callback
+      callbackContext.sendPluginResult(pluginResult);
+      // Cancel notification
+      notificationManager.cancel(notId);
     }
 
     private void setNotificationListener(CallbackContext callbackContext) {
@@ -101,6 +136,11 @@ public class PushyPlugin extends CordovaPlugin {
 
         // Attempt to deliver any pending notifications
         deliverPendingNotifications();
+    }
+
+    private void setDismissNotificationListener(CallbackContext callbackContext) {
+      // Save dismiss notification listener callback for later
+      mDismissNotificationHandler = callbackContext;
     }
 
     private void deliverPendingNotifications() {
@@ -171,6 +211,19 @@ public class PushyPlugin extends CordovaPlugin {
 
         // Invoke the JavaScript callback
         mInstance.mNotificationHandler.sendPluginResult(pluginResult);
+    }
+
+    public static void onClickNotification(JSONObject notification) {
+      onNotificationReceived(notification, mInstance.cordova.getActivity());
+    }
+
+    public static void onDismissNotification(JSONObject notification) {
+      PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, notification);
+
+      // Keep the callback valid for future use
+      pluginResult.setKeepCallback(true);
+      // Invoke the JavaScript callback
+      mInstance.mDismissNotificationHandler.sendPluginResult(pluginResult);
     }
 
     private void register(final CallbackContext callback) {

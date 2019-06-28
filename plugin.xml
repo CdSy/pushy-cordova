@@ -71,6 +71,18 @@
 
         <!-- Pushy Declarations -->
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity android:exported="true" android:name="me.pushy.sdk.cordova.internal.activity.PushyActivity" android:launchMode="singleTop">
+			    <intent-filter>
+			    	<action android:name="pushy.me.activity.PushyActivity" />
+			    	<category android:name="android.intent.category.DEFAULT" />
+			    </intent-filter>
+			</activity>
+            <activity android:exported="true" android:name="me.pushy.sdk.cordova.internal.activity.PushyDismissActivity" android:launchMode="singleTop">
+			    <intent-filter>
+			    	<action android:name="pushy.me.activity.PushyDismissActivity" />
+			    	<category android:name="android.intent.category.DEFAULT" />
+			    </intent-filter>
+			</activity>
             <!-- Pushy Notification Receiver -->
             <!-- Do not modify - internal BroadcastReceiver that listens for push notifications -->
             <receiver android:name="me.pushy.sdk.cordova.internal.receivers.PushyPushReceiver" android:exported="false">
@@ -118,5 +130,7 @@
         <source-file src="src/android/PushyPlugin.java" target-dir="src/me/pushy/sdk/cordova/internal" />
         <source-file src="src/android/util/PushyPersistence.java" target-dir="src/me/pushy/sdk/cordova/internal/util" />
         <source-file src="src/android/receivers/PushyPushReceiver.java" target-dir="src/me/pushy/sdk/cordova/internal/receivers" />
+        <source-file src="src/android/activity/PushyActivity.java" target-dir="src/me/pushy/sdk/cordova/internal/activity" />
+        <source-file src="src/android/activity/PushyDismissActivity.java" target-dir="src/me/pushy/sdk/cordova/internal/activity" />
     </platform>
 </plugin>
