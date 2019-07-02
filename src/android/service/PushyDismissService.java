@@ -13,42 +13,39 @@ import me.pushy.sdk.config.PushyLogging;
 import me.pushy.sdk.cordova.internal.PushyPlugin;
 
 public class PushyDismissService extends IntentService {
-    private static String TAG = "PushyPlugin";
+  private static String TAG = "PushyPlugin";
 
-    public PushyDismissService() {
-        super("PushyDismissService");
-    }
+  public PushyDismissService() {
+    super("PushyDismissService");
+  }
+
   /*
-   * this activity will be started if the user dismiss a notification.
-   */
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d(TAG, "==> PushyIntentService onCreate");
+  * this activity will be started if the user dismiss a notification.
+  */
+  @Override
+  public void onCreate() {
+    super.onCreate();
+  }
+
+  @Override
+  protected void onHandleIntent(Intent intent) {
+    JSONObject json = new JSONObject();
+
+    if (intent.getExtras() != null) {
+      try {
+        json.put("notid", intent.getExtras().getString("notid"));
+        sendPushPayload(json);
+      } catch (JSONException e) {
+        Log.e(PushyLogging.TAG, "Failed to insert +notid+ extra into JSONObject:" + e.getMessage());
+      }
     }
+  }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        JSONObject json = new JSONObject();
-        Log.d(TAG, "==> PushyIntentService onHandleIntent");
+  private void sendPushPayload(JSONObject data) {
+    PushyPlugin.onDismissNotification(data, getApplicationContext());
+  }
 
-        if (intent.getExtras() != null) {
-            Log.d(TAG, "==> USER DISMISSED NOTFICATION:" + intent.getExtras().getString("notid"));
-
-            try {
-                json.put("notid", intent.getExtras().getString("notid"));
-                sendPushPayload(json);
-            } catch (JSONException e) {
-                Log.e(PushyLogging.TAG, "Failed to insert +notid+ extra into JSONObject:" + e.getMessage());
-            }
-        }
-    }
-
-    private void sendPushPayload(JSONObject data) {
-        PushyPlugin.onDismissNotification(data);
-    }
-
-    @Override
+  @Override
 	public void onDestroy() {
 		super.onDestroy();
 		Log.d(TAG, "==> PushyIntentService onDestroy");

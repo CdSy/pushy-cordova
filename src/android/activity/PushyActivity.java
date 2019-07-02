@@ -17,19 +17,17 @@ import me.pushy.sdk.config.PushyLogging;
 import me.pushy.sdk.cordova.internal.PushyPlugin;
 
 public class PushyActivity extends Activity {
-    private static String TAG = "PushyPlugin";
+  private static String TAG = "PushyPlugin";
   /*
    * this activity will be started if the user touches a notification.
    */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-		Log.d(TAG, "==> PushyPluginActivity onCreate");
 
     JSONObject json = new JSONObject();
 
     if (getIntent().getExtras() != null) {
-      Log.d(TAG, "==> USER TAPPED NOTFICATION");
       try {
         json.put("wasTapped", true);
       } catch (JSONException e) {
@@ -39,7 +37,6 @@ public class PushyActivity extends Activity {
 
 			for (String key : getIntent().getExtras().keySet()) {
         String value = getIntent().getExtras().getString(key);
-        Log.d(TAG, "\tKey: " + key + " Value: " + value);
 
         try {
           json.put(key, value);
@@ -56,38 +53,26 @@ public class PushyActivity extends Activity {
     forceMainActivityReload();
   }
 
-  @Override
-  protected void onNewIntent(Intent intent) {
-    String notid = "defaultId";
-
-    if (intent.getExtras() != null) {
-      notid = intent.getExtras().getString("notid");
-    }
-
-    Log.d(TAG, "==> PushyPluginActivity onNewIntent" + notid);
-
-    if (intent.getExtras() != null) {
-      Log.d(TAG, "==> PushyPluginActivity onNewIntent notID: " + intent.getExtras().getString("notid"));
-    } else {
-      Log.d(TAG, "==> PushyPluginActivity onNewIntent Cant read notID");
-    }
-  }
-
   private void sendPushPayload(JSONObject data) {
-    PushyPlugin.onClickNotification(data);
+    PushyPlugin.onClickNotification(data, getApplicationContext());
   }
 
   private void forceMainActivityReload() {
-    Log.e(PushyLogging.TAG, "Force MainActivity Reload");
     PackageManager pm = getPackageManager();
-    Intent launchIntent = pm.getLaunchIntentForPackage(getApplicationContext().getPackageName());
-    startActivity(launchIntent);
+    String packageName;
+
+    try {
+      packageName = getApplicationContext().getPackageName();
+      Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+      startActivity(launchIntent);
+    } catch (Exception e) {
+      Log.d(TAG, "==> PushyPluginActivity couldnt forceMainActivityReload" + e.getMessage());
+    }
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-	  Log.d(TAG, "==> PushyPluginActivity onResume");
     final NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     notificationManager.cancelAll();
   }

@@ -15,38 +15,38 @@ import me.pushy.sdk.config.PushyLogging;
 import me.pushy.sdk.cordova.internal.PushyPlugin;
 
 public class PushyPushReceiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        // Prepare JSON object containing the notification payload
-        JSONObject json = new JSONObject();
+  @Override
+  public void onReceive(Context context, Intent intent) {
+    // Prepare JSON object containing the notification payload
+    JSONObject json = new JSONObject();
 
-        // Get intent extras
-        Bundle bundle = intent.getExtras();
+    // Get intent extras
+    Bundle bundle = intent.getExtras();
 
-        // Get JSON key names
-        Set<String> keys = bundle.keySet();
+    // Get JSON key names
+    Set<String> keys = bundle.keySet();
 
-        try {
-            json.put("wasTapped", false);
-        } catch (JSONException e) {
-            Log.e(PushyLogging.TAG, "Failed to insert +wasTapped+ extra into JSONObject:" + e.getMessage(), e);
-            return;
-        }
-
-        // Traverse keys
-        for (String key : keys) {
-            try {
-                // Attempt to insert the key and its value into the JSONObject
-                json.put(key, bundle.get(key));
-            }
-            catch (JSONException e) {
-                // Log error to logcat and stop execution
-                Log.e(PushyLogging.TAG, "Failed to insert intent extra into JSONObject:" + e.getMessage(), e);
-                return;
-            }
-        }
-
-        // Invoke the notification received handler
-        PushyPlugin.onNotificationReceived(json, context);
+    try {
+      json.put("wasTapped", false);
+    } catch (JSONException e) {
+      Log.e(PushyLogging.TAG, "Failed to insert +wasTapped+ extra into JSONObject:" + e.getMessage(), e);
+      return;
     }
+
+    // Traverse keys
+    for (String key : keys) {
+      try {
+        // Attempt to insert the key and its value into the JSONObject
+        json.put(key, bundle.get(key));
+      }
+      catch (JSONException e) {
+        // Log error to logcat and stop execution
+        Log.e(PushyLogging.TAG, "Failed to insert intent extra into JSONObject:" + e.getMessage(), e);
+        return;
+      }
+    }
+
+    // Invoke the notification received handler
+    PushyPlugin.onNotificationReceived(json, context);
+  }
 }

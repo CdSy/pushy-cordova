@@ -147,14 +147,10 @@ public class PushReceiver extends BroadcastReceiver {
       } catch (NumberFormatException e) {
         Log.d(PushyLogging.TAG, " ===>  Couldn't convert string notId to int notId");
       }
-      
-      Log.d(PushyLogging.TAG, "==> requestCode ===> " + requestCode);
   
       intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
   
       for (String key : pendingIntentData.keySet()) {
-        Log.d(PushyLogging.TAG, "==> set data to Intent by key ===> " + key);
-
         if (pendingIntentData.get(key) != null) {
           intent.putExtra(key, pendingIntentData.get(key));
         }
@@ -167,8 +163,6 @@ public class PushReceiver extends BroadcastReceiver {
       } else {
         pendingIntent = PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT);
       }
-      
-      Log.d(PushyLogging.TAG, "==> PendingIntent has been created successfuly");
 
       return pendingIntent;
     } catch (Exception e) {
