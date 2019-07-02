@@ -25,6 +25,7 @@ import me.pushy.sdk.util.exceptions.PushyException;
 
 public class PushyPlugin extends CordovaPlugin {
   private static final String TAG = "PushyPlugin";
+  private static boolean gForeground = false;
   private static PushyPlugin mInstance;
   private CallbackContext mNotificationHandler;
   private CallbackContext mDismissNotificationHandler;
@@ -35,11 +36,30 @@ public class PushyPlugin extends CordovaPlugin {
 
     // Store plugin instance
     mInstance = this;
+    gForeground = true;
+  }
+
+  @Override
+  public void onPause(boolean multitasking) {
+    super.onPause(multitasking);
+    gForeground = false;
+  }
+
+  @Override
+  public void onResume(boolean multitasking) {
+    super.onResume(multitasking);
+    gForeground = true;
+  }
+
+  public static boolean isInForeground() {
+    return gForeground;
   }
 
   @Override
   public void onDestroy() {
+    super.onDestroy();
     mInstance = null;
+    gForeground = false;
   }
 
   @Override
@@ -105,7 +125,12 @@ public class PushyPlugin extends CordovaPlugin {
 
         // Cancel a previously shown notification
         if (action.equals("cancelNotification")) {
-          cancelNotification(args, callbackContext, cordova.getActivity());
+          cancelNotification(args);
+        }
+
+        // Cancel all notifications
+        if (action.equals("cancelAllNotifications")) {
+          cancelAllNotifications();
         }
       }
     });
@@ -114,32 +139,25 @@ public class PushyPlugin extends CordovaPlugin {
     return true;
   }
 
-  private void cancelNotification(JSONArray args, CallbackContext callbackContext, Context context) {
-    NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+  private void cancelAllNotifications() {
+    try {
+      final NotificationManager notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+      notificationManager.cancelAll();
+    } catch (Exception e) {
+      Log.e(PushyLogging.TAG, "Failed cancel all notifications " + e.getMessage(), e);
+    }
+  }
 
+  private void cancelNotification(JSONArray args) {
+    NotificationManager notificationManager = (NotificationManager) cordova.getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
     int notId;
 
     try {
       notId = args.getInt(0);
       // Cancel notification
       notificationManager.cancel(notId);
-
-      if (callbackContext != null) {
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, args);
-
-        // Invoke the JavaScript callback
-        callbackContext.sendPluginResult(pluginResult);
-      }
-    } catch (JSONException e) {
-      Log.e(PushyLogging.TAG, "Failed get +notId+ from JSONObject:" + e.getMessage(), e);
-
-      if (callbackContext != null) {
-        PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, args);
-  
-        // Invoke the JavaScript callback
-        callbackContext.sendPluginResult(pluginResult);
-      }
-      return;
+    } catch (Exception e) {
+      Log.e(PushyLogging.TAG, "Failed cancel notification " + e.getMessage(), e);
     }
   }
 
