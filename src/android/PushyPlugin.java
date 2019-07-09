@@ -132,6 +132,15 @@ public class PushyPlugin extends CordovaPlugin {
         if (action.equals("cancelAllNotifications")) {
           cancelAllNotifications();
         }
+
+        if (action.equals("onlyInForeground")) {
+          try {
+            Boolean onlyInForeground = args.getBoolean(0);
+            PushyPersistence.setConfiguration("onlyInForeground", onlyInForeground, cordova.getActivity());
+          } catch (Exception e) {
+            Log.e(PushyLogging.TAG, "Failed get onlyInForeground value " + e.getMessage(), e);
+          }
+        }
       }
     });
 

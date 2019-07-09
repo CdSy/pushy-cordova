@@ -64,9 +64,21 @@ var actions = [
     {
         name: 'cancelNotification',
         noError: true,
-        noCallback: false,
+        noCallback: true,
         platforms: ['android']
     },
+    {
+        name: 'cancelAllNotifications',
+        noError: true,
+        noCallback: true,
+        platforms: ['android']
+    },
+    {
+        name: 'onlyInForeground',
+        noError: true,
+        noCallback: true,
+        platforms: ['android']
+    }
 ];
 
 // Expose native actions

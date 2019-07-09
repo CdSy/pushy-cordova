@@ -23,6 +23,14 @@ public class PushyPersistence {
     return PreferenceManager.getDefaultSharedPreferences(context);
   }
 
+  public static void setConfiguration(String key, Boolean value, Context context) {
+    getSettings(context).edit().putBoolean(key, value).commit();
+  }
+
+  public static Boolean getConfiguration(String key, Context context) {
+    return getSettings(context).getBoolean(key, false);
+  }
+
   public static void persistNotification(JSONObject notification, Context context, String type) {
     // Get pending notifications from SharedPreferences
     JSONArray pendingNotifications = getNotifications(context, type);

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import me.pushy.sdk.config.PushyLogging;
+import me.pushy.sdk.cordova.internal.PushyPlugin;
 import me.pushy.sdk.cordova.internal.util.PushyPersistence;
 import me.pushy.sdk.cordova.internal.activity.PushyActivity;
 import me.pushy.sdk.cordova.internal.service.PushyDismissService;
@@ -23,11 +24,13 @@ public class PushReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     // Notification title and text
+    if(PushyPersistence.getConfiguration("onlyInForeground", context) && !PushyPlugin.isInForeground()) {
+      return;
+    }
+
     String notificationTitle = getAppName(context);
     String notificationText = "";
-    int notId = 1;
-
-    notId = intent.getIntExtra("notid", 1);
+    int notId = intent.getIntExtra("notid", 1);
 
     if (intent.getStringExtra("title") != null) {
       notificationTitle = intent.getStringExtra("title");
