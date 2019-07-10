@@ -15,7 +15,7 @@ Note: There is some additional features. (only for Android for now)
 - Added dismiss listener. You can use it for detect when user cancel notification. It will emit object with 'notid' prop. For using just call Pushy.setDismissNotificationListener(({notid}) => // to do action).
 - Added 'cancel' action. Call Pushy.cancelNotification(notid).
 - Added 'cancel all' action. Call Pushy.cancelAllNotifications().
-- You can configure to show notifications only when app is running. Call Pushy.onlyInForeground(true).
+- You can configure to show notifications only when app is running and only when app is in foreground by pass 'onlyWhenRunning' and 'onlyInForeground' to object. e.g. Call Pushy.setConfiguration({onlyWhenRunning: true, onlyInForeground: true}).
 - Now when app was started it will receive array of active notifications from Notification manager instead app shared preferences. Notification object contains only 'notid' property.
 
 ## License

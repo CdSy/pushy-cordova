@@ -74,7 +74,7 @@ var actions = [
         platforms: ['android']
     },
     {
-        name: 'onlyInForeground',
+        name: 'setConfiguration',
         noError: true,
         noCallback: true,
         platforms: ['android']

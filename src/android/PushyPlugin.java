@@ -133,12 +133,19 @@ public class PushyPlugin extends CordovaPlugin {
           cancelAllNotifications();
         }
 
-        if (action.equals("onlyInForeground")) {
+        if (action.equals("setConfiguration")) {
           try {
-            Boolean onlyInForeground = args.getBoolean(0);
-            PushyPersistence.setConfiguration("onlyInForeground", onlyInForeground, cordova.getActivity());
+            JSONObject jsonObj = args.getJSONObject(0);
+            JSONArray keys = jsonObj.names();
+
+            for (int i = 0; i < keys.length (); ++i) {
+              String key = keys.getString(i);
+              Boolean value = jsonObj.getBoolean(key);
+
+              PushyPersistence.setConfiguration(key, value, cordova.getActivity());
+            }
           } catch (Exception e) {
-            Log.e(PushyLogging.TAG, "Failed get onlyInForeground value " + e.getMessage(), e);
+            Log.e(PushyLogging.TAG, "Failed get configuration value " + e.getMessage(), e);
           }
         }
       }
@@ -285,6 +292,10 @@ public class PushyPlugin extends CordovaPlugin {
 
     // Check whether activity exists and is not finishing up or destroyed
     return activity != null && !activity.isFinishing();
+  }
+
+  public static boolean isApplicationRunning() {
+    return mInstance != null && mInstance.isActivityRunning();
   }
 
   public static void onNotificationReceived(JSONObject notification, Context context) {

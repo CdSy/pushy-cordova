@@ -24,6 +24,10 @@ public class PushReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     // Notification title and text
+    if(PushyPersistence.getConfiguration("onlyWhenRunning", context) && !PushyPlugin.isApplicationRunning()) {
+      return;
+    }
+
     if(PushyPersistence.getConfiguration("onlyInForeground", context) && !PushyPlugin.isInForeground()) {
       return;
     }
