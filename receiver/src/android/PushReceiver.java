@@ -65,7 +65,7 @@ public class PushReceiver extends BroadcastReceiver {
     PendingIntent activePendingIntent = getPendingIntent(context, pendingIntentData, "activity");
     PendingIntent dismissPendingIntent = getPendingIntent(context, pendingIntentData, "service");
 
-    int colorCode = Color.parseColor("#1e9ee0") ;
+    int colorCode = Color.parseColor("#1e9ee0");
 
     // Prepare a notification with vibration and sound
     Notification.Builder builder = new Notification.Builder(context)
