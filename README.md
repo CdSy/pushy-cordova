@@ -9,8 +9,10 @@ The official [Pushy SDK](https://pushy.me/) for [Cordova](https://cordova.apache
 
 Please refer to our [detailed documentation](https://pushy.me/docs/additional-platforms/cordova) to get started.
 
-Note: There is some additional features. (only for Android for now)
+Note: There are some additional features.
 - Notifications have "wasTapped" prop in the notification listener. When user tapped on notification it will be emitted again but it will have "wasTapped": true
+
+(Features only for Android)
 - It's possible to have multiple notifications in the top bar. Notification will come with 'notid' property
 - Added dismiss listener. You can use it for detect when user cancel notification. It will emit object with 'notid' prop. For using just call Pushy.setDismissNotificationListener(({notid}) => // to do action).
 - Added 'cancel' action. Call Pushy.cancelNotification(notid).
