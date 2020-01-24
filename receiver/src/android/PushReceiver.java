@@ -10,7 +10,13 @@ import android.media.RingtoneManager;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.util.Log;
+import android.os.Bundle;
+import android.util.Log;
 
+import org.json.JSONObject;
+import org.json.JSONException;
+
+import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -34,7 +40,7 @@ public class PushReceiver extends BroadcastReceiver {
 
     String notificationTitle = getAppName(context);
     String notificationText = "";
-    int notId = intent.getIntExtra("notid", 1);
+    int notId = (int) (System.currentTimeMillis() / 1000);
 
     if (intent.getStringExtra("title") != null) {
       notificationTitle = intent.getStringExtra("title");
@@ -45,25 +51,39 @@ public class PushReceiver extends BroadcastReceiver {
       notificationText = intent.getStringExtra("message");
     }
 
-    Map<String, String> pendingIntentData = new HashMap<String, String>();
+    JSONObject json = new JSONObject();
 
     if (intent.getExtras() != null) {
-			for (String key : intent.getExtras().keySet()) {
-        String stringValue = intent.getExtras().getString(key);
-        int intValue = intent.getExtras().getInt(key);
+      Bundle bundle = intent.getExtras();
+      Set<String> keys = bundle.keySet();
 
-        if (stringValue == null) {
-          pendingIntentData.put(key, Integer.toString(intValue));
-        } else {
-          pendingIntentData.put(key, stringValue);
+			for (String key : keys) {
+        try {
+          // Attempt to insert the key and its value into the JSONObject
+          json.put(key, bundle.get(key));
+        }
+        catch (JSONException e) {
+          // Log error to logcat and stop execution
+          Log.e(PushyLogging.TAG, "Failed to insert intent extra into JSONObject:" + e.getMessage(), e);
+          return;
         }
       }
     }
 
-    pendingIntentData.put("notid", Integer.toString(notId));
+    intent.putExtra("notid", notId);
 
-    PendingIntent activePendingIntent = getPendingIntent(context, pendingIntentData, "activity");
-    PendingIntent dismissPendingIntent = getPendingIntent(context, pendingIntentData, "service");
+    try {
+      json.put("notid", notId);
+      json.put("wasTapped", false);
+    }
+    catch (JSONException e) {
+      // Log error to logcat and stop execution
+      Log.e(PushyLogging.TAG, "Failed to insert additional data into JSONObject:" + e.getMessage(), e);
+      return;
+    }
+
+    PendingIntent activePendingIntent = getPendingIntent(context, intent, "activity");
+    PendingIntent dismissPendingIntent = getPendingIntent(context, intent, "service");
 
     int colorCode = Color.parseColor("#1e9ee0");
 
@@ -97,6 +117,7 @@ public class PushReceiver extends BroadcastReceiver {
 
     // Build the notification and display it
     notificationManager.notify(notId, builder.build());
+    PushyPlugin.onNotificationReceived(json, context);
   }
 
   private int getNotificationIcon(Context context) {
@@ -137,7 +158,7 @@ public class PushReceiver extends BroadcastReceiver {
     return context.getPackageManager().getApplicationLabel(context.getApplicationInfo()).toString();
   }
 
-  private PendingIntent getPendingIntent(Context context, Map<String, String> pendingIntentData, String type) {
+  private PendingIntent getPendingIntent(Context context, Intent pendingIntentData, String type) {
     try {
       Intent intent;
       
@@ -147,21 +168,10 @@ public class PushReceiver extends BroadcastReceiver {
         intent = new Intent(context, PushyDismissService.class);
       }
 
-      int requestCode = 0;
-      
-      try {
-        requestCode = Integer.parseInt(pendingIntentData.get("notid"));
-      } catch (NumberFormatException e) {
-        Log.d(PushyLogging.TAG, " ===>  Couldn't convert string notId to int notId");
-      }
+      int requestCode = pendingIntentData.getIntExtra("notid", 0);
   
       intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-  
-      for (String key : pendingIntentData.keySet()) {
-        if (pendingIntentData.get(key) != null) {
-          intent.putExtra(key, pendingIntentData.get(key));
-        }
-      }
+      intent.putExtras(pendingIntentData);
   
       PendingIntent pendingIntent;
       

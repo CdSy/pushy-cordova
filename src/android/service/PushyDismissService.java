@@ -33,7 +33,7 @@ public class PushyDismissService extends IntentService {
 
     if (intent.getExtras() != null) {
       try {
-        json.put("notid", intent.getExtras().getString("notid"));
+        json.put("notid", intent.getExtras().get("notid"));
         sendPushPayload(json);
       } catch (JSONException e) {
         Log.e(PushyLogging.TAG, "Failed to insert +notid+ extra into JSONObject:" + e.getMessage());

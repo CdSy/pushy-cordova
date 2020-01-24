@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,6 +29,9 @@ public class PushyActivity extends Activity {
     JSONObject json = new JSONObject();
 
     if (getIntent().getExtras() != null) {
+      Bundle bundle = getIntent().getExtras();
+      Set<String> keys = bundle.keySet();
+
       try {
         json.put("wasTapped", true);
       } catch (JSONException e) {
@@ -35,11 +39,9 @@ public class PushyActivity extends Activity {
         return;
       }
 
-			for (String key : getIntent().getExtras().keySet()) {
-        String value = getIntent().getExtras().getString(key);
-
+			for (String key : keys) {
         try {
-          json.put(key, value);
+          json.put(key, bundle.get(key));
         } catch (JSONException e) {
           // Log error to logcat and stop execution
           Log.e(PushyLogging.TAG, "Failed to insert intent extra into JSONObject:" + e.getMessage());

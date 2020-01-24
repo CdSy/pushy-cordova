@@ -85,12 +85,12 @@
 			</service>
             <!-- Pushy Notification Receiver -->
             <!-- Do not modify - internal BroadcastReceiver that listens for push notifications -->
-            <receiver android:name="me.pushy.sdk.cordova.internal.receivers.PushyPushReceiver" android:exported="false">
+            <!-- <receiver android:name="me.pushy.sdk.cordova.internal.receivers.PushyPushReceiver" android:exported="false">
                 <intent-filter>
-                    <!-- Do not modify this -->
+                    Do not modify this
                     <action android:name="pushy.me" />
                 </intent-filter>
-            </receiver>
+            </receiver> -->
 
             <!-- Pushy Update Receiver -->
             <!-- Do not modify - internal BroadcastReceiver that restarts the listener service -->
@@ -129,7 +129,7 @@
         <!-- Plugin Source Files -->
         <source-file src="src/android/PushyPlugin.java" target-dir="src/me/pushy/sdk/cordova/internal" />
         <source-file src="src/android/util/PushyPersistence.java" target-dir="src/me/pushy/sdk/cordova/internal/util" />
-        <source-file src="src/android/receivers/PushyPushReceiver.java" target-dir="src/me/pushy/sdk/cordova/internal/receivers" />
+        <!-- <source-file src="src/android/receivers/PushyPushReceiver.java" target-dir="src/me/pushy/sdk/cordova/internal/receivers" /> -->
         <source-file src="src/android/activity/PushyActivity.java" target-dir="src/me/pushy/sdk/cordova/internal/activity" />
         <source-file src="src/android/service/PushyDismissService.java" target-dir="src/me/pushy/sdk/cordova/internal/service" />
     </platform>
